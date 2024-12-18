@@ -1,0 +1,188 @@
+---
+title: "General Household Survey 2023"
+author: "Francois van Schalkwyk"
+date: "2024-12-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Workspace Set Up
+
+```{r}
+
+# Load the required packages
+
+  library(tidyverse)
+  library(readxl)
+
+```
+
+
+# Data Import
+
+```{r}
+
+# Read in the Excel sheet
+
+  df <- read_excel(
+    path = '1734529269766.xls',
+    skip = 2
+    )
+
+```
+
+```{r}
+
+# Have a look at the data
+
+  glimpse(df)
+
+```
+
+
+# Data Tidying
+
+```{r}
+
+# Fill the empty values where data are repeated
+
+  df <- df %>%
+  
+    fill(everything(), .direction = "down")
+
+```
+
+```{r}
+
+# Have a look at the data
+
+  glimpse(df)
+
+```
+
+```{r}
+
+# Have a look at the structure of the data
+
+  summary(df)
+
+```
+
+
+```{r}
+
+# Change the column names
+
+df <- df %>%
+  
+  rename(province = Province,
+         popn_group = `Population group of household head`,
+         dwelling_type = `Type of main dwelling`,
+         count = ...4)
+
+```
+
+```{r}
+
+# Change the column types
+
+  df <- df %>%
+  
+    mutate(
+      province = as_factor(province),
+      popn_group = as_factor(popn_group),
+      dwelling_type = as_factor(dwelling_type)
+      )
+
+```
+
+```{r}
+
+# Remove rows where province is N=
+
+  df <- df %>%
+  
+    filter(province != "N=")
+
+```
+
+```{r}
+
+# Change dwelling type to capital case
+
+  df <- df %>%
+  
+    mutate(dwelling_type = str_to_sentence(dwelling_type))
+
+```
+
+# Data Transformation
+
+```{r}
+
+# Get the data into long format (already in long format)
+
+```
+
+
+# Data Communication
+
+```{r}
+
+# How many households surveyed in each province?
+
+  df %>%
+  
+    group_by(province) %>%
+  
+    summarise(total_households = sum(count)) %>%
+  
+    arrange(-total_households) %>%
+  
+    mutate(total_households_pct = round((total_households / sum(total_households)) * 100, 1))
+
+```
+```{r}
+
+# How many households total in the survey
+
+  df %>%
+  
+    summarise(total_households = sum(count))
+
+```
+```{r}
+
+# How is the survey broken up by the population group of the head of the household?
+
+  df %>%
+  
+    group_by(popn_group) %>%
+  
+    summarise(total_households = sum(count)) %>%
+  
+    mutate(total_households_pct = round(total_households / sum(total_households) * 100, 2)) %>%
+  
+    arrange(-total_households)
+
+```
+
+```{r}
+
+# How many households were surveyed of each household type?
+
+  df %>%
+  
+    group_by(dwelling_type) %>%
+  
+    summarise(total_households = sum(count)) %>%
+  
+    mutate(total_households_pct = round(total_households / sum(total_households) * 100, 2)) %>%
+  
+    arrange(-total_households)
+
+```
+
