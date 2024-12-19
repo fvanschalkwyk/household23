@@ -269,7 +269,9 @@ df <- df %>%
 
 # What proportion of people in each province and metro/non-metro live without fathers?
 
-  df %>%
+  df <- df %>%
+  
+    filter(father != "Not applicable") %>%
   
     group_by(province, metro, popn_group) %>%
   
@@ -280,14 +282,51 @@ df <- df %>%
 # Display as pivot table
   
     select(province, metro, popn_group, father, percentage) %>%
+
+  # Filter where father not present
+
+    filter(father == "No") %>%
   
-  # Remove the values that are not applicable
+    select(-father)
+
+```
+
+```{r}
+
+# Have a look at the table
+
+  df %>%
   
-  filter(father != "Not applicable") %>%
+    arrange(province, popn_group, metro)
+
+```
+
+```{r}
+
+# Plot the data 
+
+  df %>%
   
-  # Order by father, percentage
+    ggplot(aes(x = metro, y = province, fill = percentage)) +
   
-  arrange(father, -percentage)
+      theme_minimal() +
+  
+      geom_raster() +
+  
+      facet_grid(cols = vars(popn_group)) +
+  
+      theme(
+        axis.text.x = element_text(angle = 90),
+        legend.position = "bottom"
+      ) +
+  
+      scale_fill_distiller(name = "Percentage of individuals living in household without father", palette = "RdYlGn") +
+  
+      scale_x_discrete(name = "Metro") +
+  
+      scale_y_discrete(name = "Province")
+
+RColorBrewer::display.brewer.all()
 
 ```
 
