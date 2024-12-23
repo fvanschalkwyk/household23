@@ -6,7 +6,11 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+# Set document options
+
+  knitr::opts_chunk$set(echo = TRUE)
+
 ```
 
 # Workspace Set Up
@@ -19,6 +23,356 @@ knitr::opts_chunk$set(echo = TRUE)
   library(readxl)
 
 ```
+
+# Variable Creation from Metadata
+
+## Data Import
+
+```{r}
+
+# Read in the data from csv
+
+  df <- read_csv("GHS-2023-PERSON_F1.csv")
+
+  spec(df)
+
+```
+
+```{r}
+
+# Quick overview of the data
+
+  glimpse(df)
+
+# Random sample of the data
+
+  slice_sample(df, n = 10)
+
+```
+
+
+## Variable Creation
+
+```{r}
+
+# Provinces (provincial boundaries demarcated in 2005)
+
+  df <- df %>%
+  
+    mutate(prov = case_when(
+      prov == 1 ~ "Western Cape",
+      prov == 2 ~ "Eastern Cape",
+      prov == 3 ~ "Northern Cape",
+      prov == 4 ~ "Free State",
+      prov == 5 ~ "KwaZulu-Natal",
+      prov == 6 ~ "North West",
+      prov == 7 ~ "Gauteng",
+      prov == 8 ~ "Mpumalanga",
+      prov == 9 ~ "Limpopo",
+      .default = as.character(prov)
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Gender
+
+  df <- df %>%
+  
+    mutate(Sex = case_when(
+      Sex == 1 ~ "Male",
+      Sex == 2 ~ "Female",
+      .default = as.character(Sex)
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Population Group
+
+df <- df %>%
+  
+  mutate(Population = case_when(
+    Population == 1 ~ "African/Black",
+    Population == 2 ~ "Coloured",
+    Population == 3 ~ "Indian/Asian",
+    Population == 4 ~ "White"
+  ) %>% as_factor())
+
+```
+
+```{r}
+
+# Languages
+
+  df <- df %>%
+  
+    mutate(Languages = case_when(
+      Languages == 1 ~ "Afrikaans",
+      Languages == 2 ~ "English",
+      Languages == 3 ~ "IsiNdebele",
+      Languages == 4 ~ "IsiXhosa",
+      Languages == 5 ~ "IsiZulu",
+      Languages == 6 ~ "Khoi, Nama and San languages",
+      Languages == 7 ~ "Sepedi",
+      Languages == 8 ~ "Sesotho",
+      Languages == 9 ~ "Setswana",
+      Languages == 10 ~ "Sign language",
+      Languages == 11 ~ "SiSwati",
+      Languages == 12 ~ "Tshivenda",
+      Languages == 13 ~ "Xitsonga",
+      Languages == 14 ~ "Other language not specified",
+      Languages == 15 ~ "Unspecified"
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Relationship to the head of the household
+
+df <- df %>%
+  
+  mutate(hhc_relationship = case_when(
+     hhc_relationship == 1 ~ "Head/acting head",
+     hhc_relationship == 2 ~ "Husband/wife/partner of household head",
+     hhc_relationship == 3 ~ "Son/daughter/stepchild/adopted child of household head",
+     hhc_relationship == 4 ~ "Brother/sister/stepbrother/stepsister of household head",
+     hhc_relationship == 5 ~ "Father/mother/stepfather/stepmother of household head",
+     hhc_relationship == 6 ~ "Grandparent/great grandparent of household head",
+     hhc_relationship == 7 ~ "Grandchild/great grandchild of household head",
+     hhc_relationship == 8 ~ "Other relative (e.g. in-laws or aunt/uncle) of household head",
+     hhc_relationship == 9 ~ "Non-related persons",
+     hhc_relationship == 99 ~ "Unspecified"
+ ) %>% as_factor())
+
+```
+
+```{r}
+
+# Marital status
+
+df <- df %>%
+  
+  mutate(hhc_marital = case_when(
+    hhc_marital == 1 ~ "Legally married",
+    hhc_marital == 2 ~ "Living together like husband and wife/partners",
+    hhc_marital == 3 ~ "Divorced",
+    hhc_marital == 4 ~ "Separated, but still legally married",
+    hhc_marital == 5 ~ "Widowed",
+    hhc_marital == 6 ~ "Single, but have lived together with someone as husband/wife before",
+    hhc_marital == 7 ~ "Single and have never been married/never lived together as husband/wife before",
+    hhc_marital == 9 ~ "Unspecified"
+) %>% as_factor())
+
+```
+
+```{r}
+
+# Does the spouse live in this household (only relevant for 'Legally married' and "Living together like husband and wife/partners)
+
+  df <- df %>%
+  
+    mutate(spouse = case_when(
+      spouse == 1 ~ "Yes",
+      spouse == 2 ~ "No",
+      spouse == 8 ~ "Not applicable",
+      spouse == 9 ~ "Unspecified"
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Is the father alive?
+
+  df <- df %>%
+  
+    mutate(hhc_fath_alive = case_when(
+      hhc_fath_alive == 1 ~ "Yes",
+      hhc_fath_alive == 2 ~ "No",
+      hhc_fath_alive == 3 ~ "Do not know",
+      hhc_fath_alive == 9 ~ "Unspecified"
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Is the father part of the household? (Only for 'Yes' in previous question)
+
+  df <- df %>%
+  
+    mutate(hhc_fath_parthh = case_when(
+      hhc_fath_parthh == 1 ~ "Yes",
+      hhc_fath_parthh == 2 ~ "No",
+      hhc_fath_parthh == 8 ~ "Not applicable"
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Is the mother alive?
+
+  df <- df %>%
+  
+    mutate(hhc_moth_alive = case_when(
+      hhc_moth_alive == 1 ~ "Yes",
+      hhc_moth_alive == 2 ~ "No",
+      hhc_moth_alive == 3 ~ "Do not know",
+      hhc_moth_alive == 9 ~ "Unspecified"
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Is the mother part of the household? (Only if mother is still alive)
+
+  df <- df %>%
+  
+    mutate(hhc_moth_parthh = case_when(
+      hhc_moth_parthh == 1 ~ "Yes",
+      hhc_moth_parthh == 2 ~ "No",
+      hhc_moth_parthh == 8 ~ "Not applicable"
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# What is the highest level of education completed?
+
+  df <- df %>%
+  
+    mutate(education = case_when(
+      education == 0 ~ "GRADE R/0",
+      education == 1 ~ "GRADE 1/SUB A/CLASS 1",
+      education == 2 ~ "GRADE 2/SUB B/CLASS 2",
+      education == 3 ~ "GRADE 3/STANDARD 1/ABET/AET 1",
+      education == 4 ~ "GRADE 4/STANDARD 2",
+      education == 5 ~ "GRADE 5/STANDARD 3/ABET/AET 2",
+      education == 6 ~ "GRADE 6/STANDARD 4",
+      education == 7 ~ "GRADE 7/STANDARD 5/ABET/AET 3",
+      education == 8 ~ "GRADE 8/STANDARD 6/FORM 1",
+      education == 9 ~ "GRADE 9/STANDARD 7/FORM 2/ABET/AET 4/NCV LEVEL 1/OCCUPATIONAL CERTIFICATE - NQF LEVEL 1",
+      education == 10 ~ "GRADE 10/STANDARD 8/FORM 3/NCV LEVEL 2/OCCUPATIONAL CERTIFICATE - NQF LEV EL 2",
+      education == 11 ~ "GRADE 11/STANDARD 9/FORM 4/NCV LEVEL 3/OCCUPATIONAL CERTIFICATE NQF LEV EL 3",
+      education == 12 ~ "GRADE 12/STANDARD 10/FORM 5/ NATIONAL SENIOR CERTIFICATE/ MATRIC/ NCV LEVEL 4 /OCCUPATIONAL CERTIFICATE – NQF LEVEL 4",
+      education == 13 ~ "NTC L/N1/NQF 1",
+      education == 14 ~ "NTC LL/N2/NQF 2",
+      education == 15 ~ "NTC LLL/N3/NQF 3",
+      education == 16 ~ "N4/NTC 4/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+      education == 17 ~ "N5/NTC 5/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+      education == 18 ~ "N6/NTC 6/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+      education == 19 ~ "CERTIFICATE WITH LESS THAN GRADE 12/STANDARD 10",
+      education == 20 ~ "DIPLOMA WITH LESS THAN GRADE 12/ STANDARD 10",
+      education == 21 ~ "HIGHER/NATIONAL/ADVANCE CERTIFICATE WITH GRADE 12/STD 10/ OCCUPATIONAL CERTIFICATE – NQF LEVEL 5",
+      education == 22 ~ "DIPLOMA WITH GRADE 12/STANDARD 10/OCCUPATIONAL CERTIFICATE – NQF LEVEL 6",
+      education == 23 ~ "HIGHER DIPLOMA/OCCUPATIONAL CERTIFICATE (B-TECH DIPLOMA) – NQF LEVEL 7",
+      education == 24 ~ "BACHELOR’S DEGREE/OCCUPATIONAL CERTIFICATE – NQF LEVEL 7",
+      education == 25 ~ "HONOURS DEGREE/POSTGRADUATE DIPLOMA/OCCUPATIONAL CERTIFICATE NQF LEVEL 8",
+      education == 26 ~ "POST HIGHER DIPLOMA (M-TECH AND MASTER'S DEGREE) – NQF LEVEL 9",
+      education == 27 ~ "DOCTORAL DEGREES (D-TECH AND PHD)– NQF LEVEL 10",
+      education == 28 ~ "OTHER THAN ANY OF THE ABOVE",
+      education == 29 ~ "DO NOT KNOW",
+      education == 98 ~ "NO SCHOOLING",
+      education == 99 ~ "UNSPECIFIED"
+) %>% as_factor())
+
+```
+
+```{r}
+
+# Currently attending educational institution (aged 5 years and older)
+
+  df <- df %>%
+  
+    mutate(edu_attend = case_when(
+      edu_attend == 1 ~ "Yes",
+      edu_attend == 2 ~ "No",
+      edu_attend == 3 ~ "Do not know",
+      edu_attend == 8 ~ "Not applicable",
+      edu_attend == 9 ~ "Unspecified"
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Main reason for not attending educational institute (five years and older, not currently attending educational institution)
+
+  df <- df %>%
+  
+    mutate(edu_rsnn = case_when(
+      edu_rsnn ==  1 ~ 'Too old/young',
+      edu_rsnn ==  2 ~ 'Has completed education/satisfied with my level of education/do not want to study',
+      edu_rsnn ==  3 ~ 'School/education institution is too far',
+      edu_rsnn ==  4 ~ 'Difficulties to get to school (transport)',
+      edu_rsnn ==  5 ~ 'No money for fees',
+      edu_rsnn ==  6 ~ 'He or she is working at home or business/job',
+      edu_rsnn ==  7 ~ 'Family commitment (e.g. child minding)',
+      edu_rsnn ==  8 ~ 'Education is useless or not interesting',
+      edu_rsnn ==  9 ~ 'Unable to perform at school',
+      edu_rsnn ==  10 ~ 'Illness',
+      edu_rsnn ==  11 ~ 'Pregnancy',
+      edu_rsnn ==  12 ~ 'Failed exams',
+      edu_rsnn ==  13 ~ 'Got married',
+      edu_rsnn ==  14 ~ 'Disability',
+      edu_rsnn ==  15 ~ 'Violence in school',
+      edu_rsnn ==  16 ~ 'Not accepted for enrolment',
+      edu_rsnn ==  17 ~ 'Do not have time/too busy',
+      edu_rsnn ==  18 ~ 'Other reason for not attending an educational institution',
+      edu_rsnn ==  88 ~ 'Not applicable',
+      edu_rsnn ==  99 ~ 'Unspecified'
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Covered by medical aid scheme or medical benefit scheme or other private health insurance?
+
+  df <- df %>%
+  
+    mutate(hlt_medi = case_when(
+      hlt_medi == 1 ~ "Yes",
+      hlt_medi == 2 ~ "No",
+      hlt_medi == 3 ~ "Do not know"
+    ) %>% as_factor())
+
+```
+
+## Data Overview and Checking
+
+```{r}
+
+  glimpse(df)
+
+```
+
+
+```{r}
+
+# H
+
+```
+
+
+# Data Questions
+
+## How many people from each province were surveyed?
+
+```{r}
+
+
+
+```
+
+
 
 # Dwelling types by population group and province
 ## Data Import
@@ -329,4 +683,112 @@ df <- df %>%
 RColorBrewer::display.brewer.all()
 
 ```
+# Proportion of children that know whether father is alive or not
+# Data Import
+
+```{r}
+
+# Read in Excel document of household survey data
+
+  df <- read_excel(
+    path = '1734940107603.xls',
+    skip = 2
+    )
+
+```
+
+# Data Tidying
+
+```{r}
+
+# Replace the column names
+
+  colnames(df) <- c("province", "gender", "age_group", "population_group", "rel_head", "father_alive", "father_part_household", "count")
+
+```
+
+```{r}
+
+# Fill in the empty data values
+
+  df <- df %>%
+    
+    fill(everything(), .direction = "down")
+
+```
+
+```{r}
+
+# Change data types to factors
+
+  df <- df %>%
+    
+    mutate(across(province:father_part_household, as_factor))
+
+```
+
+```{r}
+
+glimpse(df)
+
+summary(df)
+
+```
+```{r}
+
+# Summary statistics
+
+  summary(df)
+
+  levels(df$province)
+  
+  # How many people surveyed?
+  
+  df %>%
+    
+    summarise(sum(count)) # 28 220 people surveyed
+  
+  # How many people surveyed in each province?
+  
+  df %>%
+    
+    group_by(province) %>%
+    
+    summarise(people = sum(count))
+  
+  # How many people per age group?
+  
+  df %>%
+    
+    group_by(age_group) %>%
+    
+    summarise(people = sum(count))
+  
+  # How many people per age group?
+  
+  df %>%
+    
+    group_by(rel_head) %>%
+    
+    summarise(people = sum(count))
+  
+  # Father alive?
+  
+  df %>%
+    
+    group_by(father_alive) %>%
+    
+    summarise(people = sum(count))
+  
+  # Father part of household?
+  
+  df %>%
+    
+    group_by(father_part_household) %>%
+    
+    summarise(people = sum(count))
+  
+
+```
+
 
