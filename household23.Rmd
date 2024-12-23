@@ -13,7 +13,7 @@ output: pdf_document
 
 ```
 
-# Workspace Set Up
+# 1. Workspace Set Up
 
 ```{r}
 
@@ -24,7 +24,7 @@ output: pdf_document
 
 ```
 
-# Variable Creation from Metadata
+# Person File
 
 ## Data Import
 
@@ -50,8 +50,7 @@ output: pdf_document
 
 ```
 
-
-## Variable Creation
+## Variable creation from metadata
 
 ```{r}
 
@@ -346,6 +345,47 @@ df <- df %>%
 
 ```
 
+```{r}
+
+# Does the person live in a metro?
+
+  df <- df %>%
+  
+    mutate(metro = case_when(
+      metro == 1 ~ "Metro",
+      metro == 2 ~ "Non-metro"
+    ) %>% as_factor())
+
+```
+
+```{r}
+
+# Does the person live in a metro?
+
+  df <- df %>%
+  
+    mutate(metro_code = case_when(
+metro_code == 1 ~ "WC – Non-metro",
+metro_code == 2 ~ "WC – City of Cape Town",
+metro_code == 3 ~ "EC – Non-metro",
+metro_code == 4 ~ "EC – Buffalo City",
+metro_code == 5 ~ "EC – Nelson Mandela Bay",
+metro_code == 6 ~ "NC – Non-metro",
+metro_code == 7 ~ "FS – Non-metro",
+metro_code == 8 ~ "FS – Mangaung",
+metro_code == 9 ~ "KZN – Non-metro",
+metro_code == 10 ~ "KZN – eThekwini",
+metro_code == 11 ~ "NW – Non-metro",
+metro_code == 12 ~ "GP – Non-metro",
+metro_code == 13 ~ "GP – Ekurhuleni",
+metro_code == 14 ~ "GP – City of Johannesburg",
+metro_code == 15 ~ "GP – City of Tshwane",
+metro_code == 16 ~ "MP – Non-metro",
+metro_code == 17 ~ "LP – Non-metro"
+   ) %>% as_factor())
+
+```
+
 ## Data Overview and Checking
 
 ```{r}
@@ -353,26 +393,318 @@ df <- df %>%
   glimpse(df)
 
 ```
+## Analysis
 
+### Primary analysis
 
 ```{r}
 
-# H
+# Distribution by province
+
+  df %>%
+  
+    group_by(prov) %>%
+  
+    summarise(count = n()) %>%
+  
+    arrange(-count) %>% # Total 71 174
+
+# Plot these data
+
+  ggplot(aes(x = count, y = fct_reorder(prov, count))) +
+  
+    theme_minimal() +
+  
+    labs(
+      x = "People surveyed",
+      caption = "(General Household Survey, 2023. Statistics South Africa)"
+    ) +
+  
+    geom_col() +
+  
+    theme(
+      axis.title.y = element_blank()
+    )
+
+```
+```{r}
+
+# Distribution by age group
+
+  df %>%
+  
+  # Create age bins
+  
+    mutate(
+      age_group = cut(age, 
+                      breaks = c(-1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 130),
+                      labels = c(
+                        "0-5 years", 
+                        "5-10 years",
+                        "10-15 years",
+                        "15-20 years", 
+                        "20-25 years", 
+                        "25-30 years",
+                        "30-35 years",
+                        "35-40 years", 
+                        "40-45 years", 
+                        "45-50 years", 
+                        "50-55 years", 
+                        "55-60 years", 
+                        "60-65 years", 
+                        "65-70 years", 
+                        "70-75 years", 
+                        "75+ years")
+                      ),
+      .after = age) %>%
+  
+  # How many records in each age group?
+  
+  group_by(age_group) %>%
+  
+  summarise(count = n()) %>%
+  
+  # Plot the data
+  
+  ggplot(aes(x = count, y = age_group)) +
+  
+    theme_minimal() +
+  
+    labs(x = "Individuals surveyed", y = "Age Group", caption = "(General Household Survey, 2023. Statistics South Africa)") +
+  
+    geom_col()
+
+```
+```{r}
+
+# Add gender to the above plot
+
+  df %>%
+  
+  # Split the ages into bins
+  
+    mutate(
+      age_group = cut(age, 
+                      breaks = c(-1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 130),
+                      labels = c(
+                        "0-5 years", 
+                        "5-10 years",
+                        "10-15 years",
+                        "15-20 years", 
+                        "20-25 years", 
+                        "25-30 years",
+                        "30-35 years",
+                        "35-40 years", 
+                        "40-45 years", 
+                        "45-50 years", 
+                        "50-55 years", 
+                        "55-60 years", 
+                        "60-65 years", 
+                        "65-70 years", 
+                        "70-75 years", 
+                        "75+ years")
+                      ),
+      .after = age) %>%
+  
+  # Tabulate with gender
+  
+  select(Sex, age_group) %>%
+  
+  group_by(Sex, age_group) %>%
+  
+  summarise(count = n()) %>%
+  
+  mutate(count = case_when(
+    Sex == "Male" ~ -count,
+    .default = count
+  )) %>%
+  
+  # Plot the data
+  
+  ggplot(aes(x = count, y = age_group, fill = Sex)) +
+  
+    theme_minimal() +
+  
+    labs(x = "Individuals surveyed", y = "Age Groups", caption = "(General Household Survey, 2023. Statistics South Africa)") +
+  
+    geom_col()
+  
+```
+```{r}
+
+# How does the above plot differ inside and outside of metros?
+
+  df %>%
+  
+  # Split the ages into bins
+  
+    mutate(
+      age_group = cut(age, 
+                      breaks = c(-1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 130),
+                      labels = c(
+                        "0-5 years", 
+                        "5-10 years",
+                        "10-15 years",
+                        "15-20 years", 
+                        "20-25 years", 
+                        "25-30 years",
+                        "30-35 years",
+                        "35-40 years", 
+                        "40-45 years", 
+                        "45-50 years", 
+                        "50-55 years", 
+                        "55-60 years", 
+                        "60-65 years", 
+                        "65-70 years", 
+                        "70-75 years", 
+                        "75+ years")
+                      ),
+      .after = age) %>%
+  
+  # Tabulate with gender amd metro
+  
+  select(Sex, age_group, metro) %>%
+  
+  group_by(Sex, age_group, metro) %>%
+  
+  summarise(count = n()) %>%
+  
+  mutate(count = case_when(
+    Sex == "Male" ~ -count,
+    .default = count
+  )) %>%
+  
+  # Plot the data
+  
+  ggplot(aes(x = count, y = age_group, fill = Sex)) +
+  
+    theme_minimal() +
+  
+    labs(x = "Individuals surveyed", y = "Age Groups", caption = "(General Household Survey, 2023. Statistics South Africa)") +
+  
+    geom_col() +
+  
+    facet_grid(cols = vars(metro))
+  
+```
+
+```{r}
+
+# How do the population groups vary per province, and inside and outside of metros?
+
+  df %>%
+  
+    select(prov, Population, Languages, metro_code, metro) %>%
+  
+    group_by(Population, prov) %>%
+  
+    summarise(count = n()) %>%
+  
+    arrange(-count) %>%
+  
+  # Plot the distribution of population groups between the provinces
+  
+    ggplot(aes(y = fct_reorder(prov, count, sum), x = count, fill = Population)) +
+  
+      labs(
+        x = "Individuals", 
+        y = "Province", 
+        caption = "(General Household Survey, 2023. Statistics South Africa)",
+        fill = "Population Group"
+        ) +
+  
+      geom_col(position = "stack")
+
+```
+
+```{r}
+
+# Starting with how the distribution of population groups differs in and out of metros?
+
+  df %>%
+  
+    select(Population, metro) %>%
+  
+    group_by(Population, metro) %>%
+  
+    summarise(count = n()) %>%
+  
+    arrange(-count) %>%
+  
+  # Plot the distribution of population groups between the provinces
+  
+  ggplot(aes(x = metro, y = count, fill = Population)) +
+  
+    theme_minimal() +
+  
+    labs(y = "Total individuals", fill = "Population Group") +
+  
+    geom_col(position = "dodge")
+
+```
+
+```{r}
+
+# How does the distribution of population groups vary in and out of metros for each province?
+
+  df %>%
+  
+    select(Population, metro, prov) %>%
+  
+    group_by(Population, metro, prov) %>%
+  
+    summarise(count = n()) %>%
+  
+    arrange(-count) %>%
+  
+  # Plot the distribution of population groups between the provinces
+  
+  ggplot(aes(y = metro, x = count, fill = Population)) +
+  
+    geom_col() +
+  
+    facet_grid(
+      rows = vars(fct_reorder(prov, -count, sum)),
+      switch = "y"
+      ) +
+  
+    theme(
+      axis.title.y = element_blank()
+    )
+
+```
+
+```{r}
+
+# How do the languages vary per province, and inside and outside of metros?
+
+  df %>%
+  
+    select(prov, Population, Languages, metro_code, metro) %>%
+  
+    group_by(Population, prov) %>%
+  
+    summarise(count = n()) %>%
+  
+    arrange(-count) %>%
+  
+  # Plot the distribution of population groups between the provinces
+  
+    ggplot(aes(y = fct_reorder(prov, count, sum), x = count, fill = Population)) +
+  
+      labs(
+        x = "Individuals", 
+        y = "Province", 
+        caption = "(General Household Survey, 2023. Statistics South Africa)",
+        fill = "Population Group"
+        ) +
+  
+      geom_col(position = "stack")
 
 ```
 
 
-# Data Questions
-
-## How many people from each province were surveyed?
-
-```{r}
-
-
-
-```
-
-
+# Household File
 
 # Dwelling types by population group and province
 ## Data Import
