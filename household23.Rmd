@@ -24,7 +24,7 @@ output: pdf_document
 
 ```
 
-# Person File
+# 2. Person File
 
 ## Data Import
 
@@ -386,8 +386,6 @@ metro_code == 17 ~ "LP – Non-metro"
 
 ```
 
-## Data Overview and Checking
-
 ```{r}
 
   glimpse(df)
@@ -661,28 +659,34 @@ metro_code == 17 ~ "LP – Non-metro"
   
   ggplot(aes(y = metro, x = count, fill = Population)) +
   
+    theme_minimal() +
+  
+    labs(
+      x = "Individuals surveyed",
+      caption = "(General Household Survey, 2023. Statistics South Africa)") +
+  
     geom_col() +
   
     facet_grid(
-      rows = vars(fct_reorder(prov, -count, sum)),
-      switch = "y"
+      rows = vars(fct_reorder(prov, -count, sum))
       ) +
   
     theme(
-      axis.title.y = element_blank()
+      axis.title.y = element_blank(),
+      strip.text.y = element_text(angle = 0)
     )
 
 ```
 
 ```{r}
 
-# How do the languages vary per province, and inside and outside of metros?
+# How do the languages vary per province?
 
   df %>%
   
-    select(prov, Population, Languages, metro_code, metro) %>%
+    select(prov, Languages) %>%
   
-    group_by(Population, prov) %>%
+    group_by(prov, Languages) %>%
   
     summarise(count = n()) %>%
   
@@ -690,21 +694,309 @@ metro_code == 17 ~ "LP – Non-metro"
   
   # Plot the distribution of population groups between the provinces
   
-    ggplot(aes(y = fct_reorder(prov, count, sum), x = count, fill = Population)) +
+    ggplot(aes(y = fct_reorder(prov, count, sum), x = count, fill = Languages)) +
+  
+      theme_minimal() +
   
       labs(
+        title = "Distribution of primary language by province",
+        subtitle = "South Africa",
         x = "Individuals", 
         y = "Province", 
         caption = "(General Household Survey, 2023. Statistics South Africa)",
-        fill = "Population Group"
+        fill = "Languages"
         ) +
   
-      geom_col(position = "stack")
+      geom_col(position = "stack") +
+  
+      theme(
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        axis.title.y = element_blank()
+      )
 
 ```
 
+```{r}
 
-# Household File
+# Age distribution of individuals with matric certificate
+
+df %>%
+  
+  mutate(education = education %>% fct_relevel(
+  c(
+    "UNSPECIFIED",
+    "DO NOT KNOW",
+    "NO SCHOOLING",
+    "GRADE R/0",
+    "GRADE 1/SUB A/CLASS 1",
+    "GRADE 2/SUB B/CLASS 2",
+    "GRADE 3/STANDARD 1/ABET/AET 1",
+    "GRADE 4/STANDARD 2",
+    "GRADE 5/STANDARD 3/ABET/AET 2",
+    "GRADE 6/STANDARD 4",
+    "GRADE 7/STANDARD 5/ABET/AET 3",
+    "GRADE 8/STANDARD 6/FORM 1",
+    "GRADE 9/STANDARD 7/FORM 2/ABET/AET 4/NCV LEVEL 1/OCCUPATIONAL CERTIFICATE - NQF LEVEL 1",
+    "NTC L/N1/NQF 1",
+    "GRADE 10/STANDARD 8/FORM 3/NCV LEVEL 2/OCCUPATIONAL CERTIFICATE - NQF LEV EL 2",
+    "NTC LL/N2/NQF 2",
+    "GRADE 11/STANDARD 9/FORM 4/NCV LEVEL 3/OCCUPATIONAL CERTIFICATE NQF LEV EL 3",
+    "NTC LLL/N3/NQF 3",
+    "CERTIFICATE WITH LESS THAN GRADE 12/STANDARD 10",
+    "DIPLOMA WITH LESS THAN GRADE 12/ STANDARD 10",
+    "GRADE 12/STANDARD 10/FORM 5/ NATIONAL SENIOR CERTIFICATE/ MATRIC/ NCV LEVEL 4 /OCCUPATIONAL CERTIFICATE – NQF LEVEL 4",
+    "HIGHER/NATIONAL/ADVANCE CERTIFICATE WITH GRADE 12/STD 10/ OCCUPATIONAL CERTIFICATE – NQF LEVEL 5",
+    "N4/NTC 4/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "N5/NTC 5/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "N6/NTC 6/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "DIPLOMA WITH GRADE 12/STANDARD 10/OCCUPATIONAL CERTIFICATE – NQF LEVEL 6",
+    "HIGHER DIPLOMA/OCCUPATIONAL CERTIFICATE (B-TECH DIPLOMA) – NQF LEVEL 7",
+    "BACHELOR’S DEGREE/OCCUPATIONAL CERTIFICATE – NQF LEVEL 7",
+    "HONOURS DEGREE/POSTGRADUATE DIPLOMA/OCCUPATIONAL CERTIFICATE NQF LEVEL 8",
+    "POST HIGHER DIPLOMA (M-TECH AND MASTER'S DEGREE) – NQF LEVEL 9",
+    "DOCTORAL DEGREES (D-TECH AND PHD)– NQF LEVEL 10",
+    "OTHER THAN ANY OF THE ABOVE"
+    )
+  )
+) %>%
+
+# Create new bins for age group
+    
+    mutate(
+        age_group = cut(age, 
+                        breaks = c(-1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 130),
+                        labels = c(
+                          "0-5 years", 
+                          "5-10 years",
+                          "10-15 years",
+                          "15-20 years", 
+                          "20-25 years", 
+                          "25-30 years",
+                          "30-35 years",
+                          "35-40 years", 
+                          "40-45 years", 
+                          "45-50 years", 
+                          "50-55 years", 
+                          "55-60 years", 
+                          "60-65 years", 
+                          "65-70 years", 
+                          "70-75 years", 
+                          "75+ years")
+                        ),
+        .after = age) %>%
+
+# How does education level differ by age group?
+    
+    select(Population, age_group, education) %>%
+  
+    filter(education %>% str_detect("MATRIC")) %>%
+  
+    group_by(age_group, Population) %>%
+  
+    summarise(count = n()) %>%
+  
+  # Plot these data
+  
+    ggplot(aes(x = Population, y = count, fill = age_group)) +
+  
+      theme_minimal() +
+  
+      labs(
+        x = "Population",
+        y = "Individuals",
+        fill = "Age Group",
+        caption = "(General Household Survey, 2023. Statistics South Africa)",
+        title = "Age distribution of individuals with matric certificate or equivalent by population group"
+        ) +
+  
+      geom_col(position = position_dodge2()) +
+  
+      theme(
+        legend.position = "bottom"
+      )
+
+```
+```{r}
+
+# Age distribution of individuals with matric standardised by population group
+
+df %>%
+  
+  mutate(education = education %>% fct_relevel(
+  c(
+    "UNSPECIFIED",
+    "DO NOT KNOW",
+    "NO SCHOOLING",
+    "GRADE R/0",
+    "GRADE 1/SUB A/CLASS 1",
+    "GRADE 2/SUB B/CLASS 2",
+    "GRADE 3/STANDARD 1/ABET/AET 1",
+    "GRADE 4/STANDARD 2",
+    "GRADE 5/STANDARD 3/ABET/AET 2",
+    "GRADE 6/STANDARD 4",
+    "GRADE 7/STANDARD 5/ABET/AET 3",
+    "GRADE 8/STANDARD 6/FORM 1",
+    "GRADE 9/STANDARD 7/FORM 2/ABET/AET 4/NCV LEVEL 1/OCCUPATIONAL CERTIFICATE - NQF LEVEL 1",
+    "NTC L/N1/NQF 1",
+    "GRADE 10/STANDARD 8/FORM 3/NCV LEVEL 2/OCCUPATIONAL CERTIFICATE - NQF LEV EL 2",
+    "NTC LL/N2/NQF 2",
+    "GRADE 11/STANDARD 9/FORM 4/NCV LEVEL 3/OCCUPATIONAL CERTIFICATE NQF LEV EL 3",
+    "NTC LLL/N3/NQF 3",
+    "CERTIFICATE WITH LESS THAN GRADE 12/STANDARD 10",
+    "DIPLOMA WITH LESS THAN GRADE 12/ STANDARD 10",
+    "GRADE 12/STANDARD 10/FORM 5/ NATIONAL SENIOR CERTIFICATE/ MATRIC/ NCV LEVEL 4 /OCCUPATIONAL CERTIFICATE – NQF LEVEL 4",
+    "HIGHER/NATIONAL/ADVANCE CERTIFICATE WITH GRADE 12/STD 10/ OCCUPATIONAL CERTIFICATE – NQF LEVEL 5",
+    "N4/NTC 4/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "N5/NTC 5/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "N6/NTC 6/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "DIPLOMA WITH GRADE 12/STANDARD 10/OCCUPATIONAL CERTIFICATE – NQF LEVEL 6",
+    "HIGHER DIPLOMA/OCCUPATIONAL CERTIFICATE (B-TECH DIPLOMA) – NQF LEVEL 7",
+    "BACHELOR’S DEGREE/OCCUPATIONAL CERTIFICATE – NQF LEVEL 7",
+    "HONOURS DEGREE/POSTGRADUATE DIPLOMA/OCCUPATIONAL CERTIFICATE NQF LEVEL 8",
+    "POST HIGHER DIPLOMA (M-TECH AND MASTER'S DEGREE) – NQF LEVEL 9",
+    "DOCTORAL DEGREES (D-TECH AND PHD)– NQF LEVEL 10",
+    "OTHER THAN ANY OF THE ABOVE"
+    )
+  )
+) %>%
+
+# Create new bins for age group
+    
+    mutate(
+        age_group = cut(age, 
+                        breaks = c(-1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 130),
+                        labels = c(
+                          "0-5 years", 
+                          "5-10 years",
+                          "10-15 years",
+                          "15-20 years", 
+                          "20-25 years", 
+                          "25-30 years",
+                          "30-35 years",
+                          "35-40 years", 
+                          "40-45 years", 
+                          "45-50 years", 
+                          "50-55 years", 
+                          "55-60 years", 
+                          "60-65 years", 
+                          "65-70 years", 
+                          "70-75 years", 
+                          "75+ years")
+                        ),
+        .after = age) %>%
+
+# How does education level differ by age group?
+    
+    select(Population, age_group, education) %>%
+  
+  # Filter for only matric
+  
+    filter(education %>% str_detect("MATRIC")) %>%
+  
+    group_by(age_group, Population) %>%
+  
+    summarise(count = n()) %>%
+  
+    ungroup(age_group) %>% group_by(Population) %>%
+  
+    mutate(percentage = count / sum(count) * 100) %>%
+  
+  # Plot these data in a heatmap
+  
+    ggplot(aes(x = Population, y = percentage, fill = age_group)) +
+  
+      theme_minimal() +
+  
+      labs(
+        x = "Population",
+        y = "Proportion of population group (%)",
+        fill = "Age Group",
+        caption = "(General Household Survey, 2023. Statistics South Africa)",
+        title = "Age distribution of individuals with matric certificate or equivalent by population group"
+        ) +
+  
+      geom_col(position = "dodge") +
+  
+      theme(
+        legend.position = "bottom"
+      )
+
+```
+```{r}
+
+# Relationship between age and education level for each population group
+
+df %>%
+
+# Create new bins for age group
+    
+    mutate(
+        age_group = cut(age, 
+                        breaks = c(-1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 130),
+                        labels = c(
+                          "0-5 years", 
+                          "5-10 years",
+                          "10-15 years",
+                          "15-20 years", 
+                          "20-25 years", 
+                          "25-30 years",
+                          "30-35 years",
+                          "35-40 years", 
+                          "40-45 years", 
+                          "45-50 years", 
+                          "50-55 years", 
+                          "55-60 years", 
+                          "60-65 years", 
+                          "65-70 years", 
+                          "70-75 years", 
+                          "75+ years")
+                        ),
+        .after = age) %>%
+
+# How does education level differ by age group?
+    
+    select(Population, age_group, education, Sex) %>%
+  
+    filter(education %>% str_detect("NO SCHOOLING")) %>%
+  
+    group_by(age_group, Population, Sex) %>%
+  
+    summarise(count = n()) %>%
+  
+    ungroup(age_group) %>%
+  
+    mutate(percentage = count / sum(count) * 100) %>%
+  
+    mutate(percentage = case_when(
+      Sex == "Female" ~ -percentage,
+      Sex == "Male" ~ percentage
+    )) %>%
+  
+  # Plot the data
+  
+  ggplot(aes(x = percentage, y = age_group, fill = Sex)) +
+  
+    theme_minimal() +
+  
+    labs(
+      x = "Proportion of individuals surveyed",
+      y = "Age Group",
+      caption = "(General Household Survey, 2023. Statistics South Africa)",
+      title = "Age distribution of individuals without formal schooling"
+    ) +
+  
+    geom_col() +
+  
+    facet_grid(rows = vars(Population)) +
+  
+    theme(
+      axis.title.y = element_blank()
+    )
+
+```
+
+# 3. Household File
 
 # Dwelling types by population group and province
 ## Data Import
