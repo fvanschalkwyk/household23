@@ -7,9 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 
-# Set document options
-
-  knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
@@ -17,10 +15,8 @@ output: pdf_document
 
 ```{r}
 
-# Load the required packages
-
-  library(tidyverse)
-  library(readxl)
+library(tidyverse)
+library(readxl)
 
 ```
 
@@ -31,22 +27,19 @@ output: pdf_document
 ```{r}
 
 # Read in the data from csv
+df <- read_csv("GHS-2023-PERSON_F1.csv")
 
-  df <- read_csv("GHS-2023-PERSON_F1.csv")
-
-  spec(df)
+spec(df)
 
 ```
 
 ```{r}
 
 # Quick overview of the data
-
-  glimpse(df)
+glimpse(df)
 
 # Random sample of the data
-
-  slice_sample(df, n = 10)
+slice_sample(df, n = 10)
 
 ```
 
@@ -55,21 +48,19 @@ output: pdf_document
 ```{r}
 
 # Provinces (provincial boundaries demarcated in 2005)
-
-  df <- df %>%
-  
-    mutate(prov = case_when(
-      prov == 1 ~ "Western Cape",
-      prov == 2 ~ "Eastern Cape",
-      prov == 3 ~ "Northern Cape",
-      prov == 4 ~ "Free State",
-      prov == 5 ~ "KwaZulu-Natal",
-      prov == 6 ~ "North West",
-      prov == 7 ~ "Gauteng",
-      prov == 8 ~ "Mpumalanga",
-      prov == 9 ~ "Limpopo",
-      .default = as.character(prov)
-    ) %>% as_factor())
+df <- df %>%
+  mutate(prov = case_when(
+    prov == 1 ~ "Western Cape",
+    prov == 2 ~ "Eastern Cape",
+    prov == 3 ~ "Northern Cape",
+    prov == 4 ~ "Free State",
+    prov == 5 ~ "KwaZulu-Natal",
+    prov == 6 ~ "North West",
+    prov == 7 ~ "Gauteng",
+    prov == 8 ~ "Mpumalanga",
+    prov == 9 ~ "Limpopo",
+    .default = as.character(prov)
+  ) %>% as_factor())
 
 ```
 
@@ -996,21 +987,221 @@ df %>%
 
 ```
 
-# 3. Household File
+```{r}
 
-# Dwelling types by population group and province
-## Data Import
+# Age distribution of individuals with matric standardised by population group
+
+df %>%
+  
+  # Change the order of the education data
+  
+  mutate(education = education %>% fct_relevel(
+  c(
+    "UNSPECIFIED",
+    "DO NOT KNOW",
+    "NO SCHOOLING",
+    "GRADE R/0",
+    "GRADE 1/SUB A/CLASS 1",
+    "GRADE 2/SUB B/CLASS 2",
+    "GRADE 3/STANDARD 1/ABET/AET 1",
+    "GRADE 4/STANDARD 2",
+    "GRADE 5/STANDARD 3/ABET/AET 2",
+    "GRADE 6/STANDARD 4",
+    "GRADE 7/STANDARD 5/ABET/AET 3",
+    "GRADE 8/STANDARD 6/FORM 1",
+    "GRADE 9/STANDARD 7/FORM 2/ABET/AET 4/NCV LEVEL 1/OCCUPATIONAL CERTIFICATE - NQF LEVEL 1",
+    "NTC L/N1/NQF 1",
+    "GRADE 10/STANDARD 8/FORM 3/NCV LEVEL 2/OCCUPATIONAL CERTIFICATE - NQF LEV EL 2",
+    "NTC LL/N2/NQF 2",
+    "GRADE 11/STANDARD 9/FORM 4/NCV LEVEL 3/OCCUPATIONAL CERTIFICATE NQF LEV EL 3",
+    "NTC LLL/N3/NQF 3",
+    "CERTIFICATE WITH LESS THAN GRADE 12/STANDARD 10",
+    "DIPLOMA WITH LESS THAN GRADE 12/ STANDARD 10",
+    "GRADE 12/STANDARD 10/FORM 5/ NATIONAL SENIOR CERTIFICATE/ MATRIC/ NCV LEVEL 4 /OCCUPATIONAL CERTIFICATE – NQF LEVEL 4",
+    "HIGHER/NATIONAL/ADVANCE CERTIFICATE WITH GRADE 12/STD 10/ OCCUPATIONAL CERTIFICATE – NQF LEVEL 5",
+    "N4/NTC 4/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "N5/NTC 5/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "N6/NTC 6/OCCUPATIONAL CERTIFICATE NQF LEVEL 5",
+    "DIPLOMA WITH GRADE 12/STANDARD 10/OCCUPATIONAL CERTIFICATE – NQF LEVEL 6",
+    "HIGHER DIPLOMA/OCCUPATIONAL CERTIFICATE (B-TECH DIPLOMA) – NQF LEVEL 7",
+    "BACHELOR’S DEGREE/OCCUPATIONAL CERTIFICATE – NQF LEVEL 7",
+    "HONOURS DEGREE/POSTGRADUATE DIPLOMA/OCCUPATIONAL CERTIFICATE NQF LEVEL 8",
+    "POST HIGHER DIPLOMA (M-TECH AND MASTER'S DEGREE) – NQF LEVEL 9",
+    "DOCTORAL DEGREES (D-TECH AND PHD)– NQF LEVEL 10",
+    "OTHER THAN ANY OF THE ABOVE"
+    )
+  )
+) %>%
+  
+# Change the names of the factor levels to make them simpler to read
+  
+  mutate(education = education %>% fct_recode(
+    
+    "Unspecified" = "UNSPECIFIED",
+    "Do not know" = "DO NOT KNOW",
+    "No formal schooling" = "NO SCHOOLING",
+    "Grade R/0" = "GRADE R/0",
+    "Grade 1" = "GRADE 1/SUB A/CLASS 1",
+    "Grade 2" = "GRADE 2/SUB B/CLASS 2",
+    "Grade 3" = "GRADE 3/STANDARD 1/ABET/AET 1",
+    "Grade 4" = "GRADE 4/STANDARD 2",
+    "Grade 5" = "GRADE 5/STANDARD 3/ABET/AET 2",
+    "Grade 6" = "GRADE 6/STANDARD 4",
+    "Grade 7" = "GRADE 7/STANDARD 5/ABET/AET 3",
+    "Grade 8" = "GRADE 8/STANDARD 6/FORM 1",
+    "Grade 9" = "GRADE 9/STANDARD 7/FORM 2/ABET/AET 4/NCV LEVEL 1/OCCUPATIONAL CERTIFICATE - NQF LEVEL 1",
+    "Grade 10" = "GRADE 10/STANDARD 8/FORM 3/NCV LEVEL 2/OCCUPATIONAL CERTIFICATE - NQF LEV EL 2",
+    "Grade 11" = "GRADE 11/STANDARD 9/FORM 4/NCV LEVEL 3/OCCUPATIONAL CERTIFICATE NQF LEV EL 3",
+    "Certificate with less than Grade 12" = "CERTIFICATE WITH LESS THAN GRADE 12/STANDARD 10",
+    "Diploma with less than Grade 12" = "DIPLOMA WITH LESS THAN GRADE 12/ STANDARD 10",
+    "Grade 12" = "GRADE 12/STANDARD 10/FORM 5/ NATIONAL SENIOR CERTIFICATE/ MATRIC/ NCV LEVEL 4 /OCCUPATIONAL CERTIFICATE – NQF LEVEL 4",
+    "Certificate with Grade 12" = "HIGHER/NATIONAL/ADVANCE CERTIFICATE WITH GRADE 12/STD 10/ OCCUPATIONAL CERTIFICATE – NQF LEVEL 5",
+    "Diploma with Grade 12" = "DIPLOMA WITH GRADE 12/STANDARD 10/OCCUPATIONAL CERTIFICATE – NQF LEVEL 6",
+    "Higher Diploma" = "HIGHER DIPLOMA/OCCUPATIONAL CERTIFICATE (B-TECH DIPLOMA) – NQF LEVEL 7",
+    "Bachelor's Degree" = "BACHELOR’S DEGREE/OCCUPATIONAL CERTIFICATE – NQF LEVEL 7",
+    "Honours Degree" = "HONOURS DEGREE/POSTGRADUATE DIPLOMA/OCCUPATIONAL CERTIFICATE NQF LEVEL 8",
+    "Master's Degree" = "POST HIGHER DIPLOMA (M-TECH AND MASTER'S DEGREE) – NQF LEVEL 9",
+    "Doctoral Degree" = "DOCTORAL DEGREES (D-TECH AND PHD)– NQF LEVEL 10",
+    "Other" = "OTHER THAN ANY OF THE ABOVE"
+    
+  )) %>%
+
+# Create new bins for age group
+    
+    mutate(
+        age_group = cut(age, 
+                        breaks = c(-1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 130),
+                        labels = c(
+                          "0-5 years", 
+                          "5-10 years",
+                          "10-15 years",
+                          "15-20 years", 
+                          "20-25 years", 
+                          "25-30 years",
+                          "30-35 years",
+                          "35-40 years", 
+                          "40-45 years", 
+                          "45-50 years", 
+                          "50-55 years", 
+                          "55-60 years", 
+                          "60-65 years", 
+                          "65-70 years", 
+                          "70-75 years", 
+                          "75+ years")
+                        ),
+        .after = age) %>%
+
+# How does education level differ by age group?
+    
+    select(Population, age_group, education) %>%
+  
+    group_by(Population, age_group, education) %>%
+  
+    summarise(count = n()) %>%
+  
+    mutate(percentage = count / sum(count) * 100) %>%
+  
+  # Show only matric results
+  
+    filter(education == "Grade 12") %>%
+  
+  # Create a plot that shows how the level of education differs with age group
+
+  ggplot(aes(x = age_group, y = percentage, colour = population)) +
+  
+    geom_line()
+
+
+```
 
 ```{r}
 
-# Read in the Excel sheet
+# How does medical aid usage compare between age groups and population groups?
 
-  df <- read_excel(
-    path = '1734529269766.xls',
-    skip = 2
+# Medical Aid is a Yes/No response - presence/absence
+# Age groups are binned into about 11 categories (discrete ordinal)
+# Population groups are discrete and unordered
+# Frequency is an integer/count
+
+# How many people have medical aid and how many don't in each population group, in each age group, and in both population and age groups?
+
+  df %>%
+  
+    mutate(
+        age_group = cut(age, 
+                        breaks = c(-1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 130),
+                        labels = c(
+                          "0-5 years", 
+                          "5-10 years",
+                          "10-15 years",
+                          "15-20 years", 
+                          "20-25 years", 
+                          "25-30 years",
+                          "30-35 years",
+                          "35-40 years", 
+                          "40-45 years", 
+                          "45-50 years", 
+                          "50-55 years", 
+                          "55-60 years", 
+                          "60-65 years", 
+                          "65-70 years", 
+                          "70-75 years", 
+                          "75+ years")
+                        ),
+        .after = age) %>%
+  
+  # In each age group, how many people have and don't have medical aid?
+  
+  select(age_group, hlt_medi, Population) %>%
+  
+  group_by(age_group, hlt_medi, Population) %>%
+  
+  summarise(count = n()) %>%
+  
+  ungroup(hlt_medi) %>%
+  
+  mutate(percentage = count / sum(count) * 100) -> df1
+
+  df1 %>%
+    
+    group_by(Population, age_group) %>%
+    
+    mutate(percentage = count / sum(count) * 100) -> df2
+  
+# Plot the proportion of medical aid users per age group
+  
+  ggplot(df1, aes(x = percentage, y = age_group, fill = hlt_medi)) +
+  
+    theme_minimal() +
+  
+    geom_col() +
+  
+    theme(
+      axis.title.y = element_blank()
     )
+  
+  # Plot this pattern for each population group
+  
+  ggplot(df2, aes(x = percentage, y = age_group, fill = hlt_medi)) +
+    
+    theme_minimal() +
+    
+    labs(
+      x = "% of individuals surveyed",
+      caption = "(General Household Survey, 2023. Statistics South Africa)",
+      fill = "Medical Aid"
+    ) +
+    
+    geom_col() +
+    
+    theme(
+      axis.title.y = element_blank()
+    ) +
+    
+    facet_grid(cols = vars(Population))
 
 ```
+
 
 ```{r}
 
@@ -1307,6 +1498,7 @@ df <- df %>%
 RColorBrewer::display.brewer.all()
 
 ```
+
 # Proportion of children that know whether father is alive or not
 # Data Import
 
